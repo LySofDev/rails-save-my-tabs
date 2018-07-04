@@ -106,4 +106,49 @@ class TabsControllerTest < ActionDispatch::IntegrationTest
     assert Tab.any?, "A tab should not be destroyed."
   end
 
+  test "User can see owned tabs" do
+    user = create(:user)
+    authorized_headers = { 'Authorization': "Bearer #{user.as_token}" }
+    owned_tabs = 2
+    not_owned_tabs = 3
+    owned_tabs.times { create(:tab, user: user) }
+    not_owned_tabs.times { create(:tab) }
+    assert_equal owned_tabs + not_owned_tabs, Tab.count, "Tabs were not created."
+    get tabs_url, headers: authorized_headers
+    assert_response :success, "Response should be successful"
+    json = JSON.parse(response.body)
+    assert_equal owned_tabs, json.count, "Incorrect tabs were returned."
+  end
+
+  test "Unauthorized user cannot see tabs" do
+    user = create(:user)
+    owned_tabs = 2
+    not_owned_tabs = 3
+    owned_tabs.times { create(:tab, user: user) }
+    not_owned_tabs.times { create(:tab) }
+    assert_equal owned_tabs + not_owned_tabs, Tab.count, "Tabs were not created."
+    get tabs_url
+    assert_response 401, "Response should be 401 - Unauthorized"
+  end
+
+  test "User can view an owned tab" do
+    user = create(:user)
+    authorized_headers = { 'Authorization': "Bearer #{user.as_token}" }
+    tab = create(:tab, user: user)
+    get tab_url(tab), headers: authorized_headers
+    assert_response :success, "Response should be successful"
+    json = JSON.parse(response.body)
+    assert_equal tab.title, json["title"], "Title was not received."
+    assert_equal tab.url, json["url"], "Url was not received."
+  end
+
+  test "User cannot be a tab that is not owned" do
+    user = create(:user)
+    other_user = create(:user)
+    authorized_headers = { 'Authorization': "Bearer #{user.as_token}" }
+    tab = create(:tab, user: other_user)
+    get tab_url(tab), headers: authorized_headers
+    assert_response 403, "Response should be 403 - Forbidden"
+  end
+
 end

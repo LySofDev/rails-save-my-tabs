@@ -1,6 +1,14 @@
 class TabsController < ApplicationController
   before_action :authenticate_user
-  before_action :find_tab_with_current_user, only: [:update, :destroy]
+  before_action :find_tab_with_current_user, only: [:show, :update, :destroy]
+
+  def index
+    render json: current_user.tabs
+  end
+
+  def show
+    render json: @tab
+  end
 
   def create
     @tab = current_user.tabs.new(tab_params)
