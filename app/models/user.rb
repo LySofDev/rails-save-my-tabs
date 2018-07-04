@@ -6,8 +6,10 @@ class User < ApplicationRecord
   # User has client role by default
   enum role: [:client, :admin]
 
-  # Email cannot be empty
-  validates_presence_of :email
+  # Email cannot be empty and must be unique
+  validates :email,
+    presence: true,
+    uniqueness: true
 
   # Hide :password_digest from serialized object
   def as_json(options = {})

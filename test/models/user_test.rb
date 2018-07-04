@@ -34,4 +34,9 @@ class UserTest < ActiveSupport::TestCase
     assert user.client?, "Default role is not client."
   end
 
+  test "User email must be unique" do
+    first_user = create(:user)
+    second_user = build(:user, email: first_user.email)
+    assert second_user.invalid?, "Email should be unique."
+  end
 end
