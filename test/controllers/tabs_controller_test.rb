@@ -36,4 +36,44 @@ class TabsControllerTest < ActionDispatch::IntegrationTest
     assert_equal ["Url can't be blank"], json["errors"], "Error was not received."
   end
 
+  test "Tab can be updated by authorized user" do
+    user = create(:user)
+    authorized_headers = { 'Authorization': "Bearer #{user.as_token}" }
+    tab = create(:tab, user: user)
+    updated_tab = { title: "The New Title" }
+    patch tab_url(tab), params: { tab: updated_tab }, headers: authorized_headers
+    assert_response :success, "Response should be successful"
+    json = JSON.parse(response.body)
+    assert_equal updated_tab[:title], json["title"], "Title was not persisted."
+  end
+
+  test "Tab cannot be updated by unauthoized user" do
+    user = create(:user)
+    tab = create(:tab, user: user)
+    updated_tab = { title: "The New Title" }
+    patch tab_url(tab), params: { tab: updated_tab }
+    assert_response 401, "Response should be 401 - Unauthorized"
+  end
+
+  test "Tab cannot be updated by another user" do
+    user = create(:user)
+    other_user = create(:user)
+    authorized_headers = { 'Authorization': "Bearer #{other_user.as_token}" }
+    tab = create(:tab, user: user)
+    updated_tab = { title: "The New Title" }
+    patch tab_url(tab), params: { tab: updated_tab }, headers: authorized_headers
+    assert_response 403, "Response should be 403 - Forbidden"
+  end
+
+  test "Tab cannot be updated with invalid data" do
+    user = create(:user)
+    authorized_headers = { 'Authorization': "Bearer #{user.as_token}" }
+    tab = create(:tab, user: user)
+    updated_tab = { url: nil }
+    patch tab_url(tab), params: { tab: updated_tab }, headers: authorized_headers
+    assert_response 422, "Response should 422 - Unprocesable"
+    json = JSON.parse(response.body)
+    assert_equal ["Url can't be blank"], json["errors"], "Errors were not passed."
+  end
+
 end
