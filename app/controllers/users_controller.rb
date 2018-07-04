@@ -13,6 +13,8 @@ class UsersController < ApplicationController
   def update
     if current_user.update(user_params)
       render json: current_user
+    else
+      render json: { errors: current_user.errors.full_messages }, status: 422
     end
   end
 
