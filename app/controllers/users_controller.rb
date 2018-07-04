@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :authenticate_user, only: [:update]
+  before_action :authenticate_user, only: [:update, :destroy]
 
   def create
     @user = User.new(user_params)
@@ -16,6 +16,11 @@ class UsersController < ApplicationController
     else
       render json: { errors: current_user.errors.full_messages }, status: 422
     end
+  end
+
+  def destroy
+    current_user.destroy
+    render json: nil, status: 200
   end
 
   private

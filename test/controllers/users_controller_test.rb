@@ -61,4 +61,22 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     json = JSON.parse(response.body)
     assert_equal ["Email can't be blank"], json["errors"]
   end
+
+  test "Authorized user can destroy account" do
+    user = create(:user)
+    assert User.any?, "A user should exist."
+    token = Knock::AuthToken.new(payload: { sub: user.id }).token
+    authenticated_header = { 'Authorization': "Bearer #{token}" }
+    delete user_url(user), headers: authenticated_header
+    assert_response :success, "Response should be success."
+    refute User.any?, "No users should exist."
+  end
+
+  test "Unauthorized user cannot destroy account" do
+    user = create(:user)
+    assert User.any?, "A user should exist."
+    delete user_url(user)
+    assert_response 401, "Response should be 401 - Unauthorized"
+    assert User.any?, "A user should not be deleted."
+  end
 end
