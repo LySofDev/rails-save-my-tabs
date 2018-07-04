@@ -3,6 +3,9 @@ class User < ApplicationRecord
   # Encrypted password stored in database as password_digest
   has_secure_password
 
+  # All tabs belong to a user
+  has_many :tabs
+  
   # User has client role by default
   enum role: [:client, :admin]
 
