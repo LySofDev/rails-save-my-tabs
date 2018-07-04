@@ -52,4 +52,10 @@ class UserTest < ActiveSupport::TestCase
     refute user.has_password("will-fail"), "User should not have matching password."
   end
 
+  test "User as_token returns a JWT token" do
+    user = create(:user)
+    expected_token = Knock::AuthToken.new(payload: { sub: user.id }).token
+    assert_equal expected_token, user.as_token, "Tokens should match."
+  end
+
 end

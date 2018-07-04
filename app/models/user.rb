@@ -21,4 +21,8 @@ class User < ApplicationRecord
     BCrypt::Password.new(self.password_digest) == password
   end
 
+  # Return the User as a JWT token
+  def as_token
+    Knock::AuthToken.new(payload: { sub: self.id }).token
+  end
 end
