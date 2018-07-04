@@ -30,4 +30,23 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal({ "errors" => ["Password confirmation doesn't match Password"] }, json)
   end
 
+  test "User can be updated with authorization" do
+    user = create(:user)
+    new_email = "mac.hdz@gmail"
+    updated_attributes = { email: new_email }
+    token = Knock::AuthToken.new(payload: { sub: user.id }).token
+    authenticated_header = { 'Authorization': "Bearer #{token}" }
+    patch user_url(user), params: { user: updated_attributes}, headers: authenticated_header
+    assert_response :success, "Response was not success."
+    json = JSON.parse(response.body)
+    assert_equal new_email, json["email"], "Email was not updated."
+  end
+
+  test "User cannot be updasted without authorization" do
+    user = create(:user)
+    new_email = "mac.hdz@gmail"
+    updated_attributes = { email: new_email }
+    patch user_url(user), params: { user: updated_attributes}
+    assert_response 401, "Response should have been 401 - Unauthorized."
+  end
 end
