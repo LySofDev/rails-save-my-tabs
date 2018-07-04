@@ -3,7 +3,7 @@ class TabsController < ApplicationController
   before_action :find_tab_with_current_user, only: [:show, :update, :destroy]
 
   def index
-    render json: current_user.tabs
+    render json: current_user.tabs.page(params[:page]).per(params[:count])
   end
 
   def show

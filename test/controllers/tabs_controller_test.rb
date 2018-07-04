@@ -120,6 +120,16 @@ class TabsControllerTest < ActionDispatch::IntegrationTest
     assert_equal owned_tabs, json.count, "Incorrect tabs were returned."
   end
 
+  test "Tabs are paginated" do
+    user = create(:user)
+    authorized_headers = { 'Authorization': "Bearer #{user.as_token}" }
+    7.times { create(:tab, user: user) }
+    get tabs_url, headers: authorized_headers, params: { page: 2, count: 5 }
+    assert_response :success, "Response should be successful"
+    json = JSON.parse(response.body)
+    assert_equal 2, json.count
+  end
+
   test "Unauthorized user cannot see tabs" do
     user = create(:user)
     owned_tabs = 2
