@@ -49,4 +49,16 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     patch user_url(user), params: { user: updated_attributes}
     assert_response 401, "Response should have been 401 - Unauthorized."
   end
+
+  test "User cannot update with invalid data" do
+    user = create(:user)
+    new_email = ""
+    updated_attributes = { email: new_email }
+    token = Knock::AuthToken.new(payload: { sub: user.id }).token
+    authenticated_header = { 'Authorization': "Bearer #{token}" }
+    patch user_url(user), params: { user: updated_attributes}, headers: authenticated_header
+    assert_response 422, "Response should be 422 - Unprocessable Entity."
+    json = JSON.parse(response.body)
+    assert_equal ["Email can't be blank."], json["errors"]
+  end
 end
