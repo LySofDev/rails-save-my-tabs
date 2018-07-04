@@ -16,11 +16,24 @@ class TabsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "An unauthenticated cannot create a tab" do
-
+    user = create(:user)
+    refute Tab.any?, "No tabs should exist."
+    new_tab = attributes_for(:tab, user: user)
+    post tabs_url, params: { tab: new_tab }
+    assert_response 401, "Response should be 401 - Unauthorized"
+    refute Tab.any?, "No tabs should be created."
   end
 
   test "Invalid tabs cannot be created" do
-
+    user = create(:user)
+    refute Tab.any?, "No tabs should exist."
+    new_tab = attributes_for(:tab, user: user, url: nil)
+    authorized_headers = { 'Authorization': "Bearer #{user.as_token}" }
+    post tabs_url, params: { tab: new_tab }, headers: authorized_headers
+    assert_response 422, "Response should be 422 - Unprocesable Entity"
+    refute Tab.any?, "Tab should not be created."
+    json = JSON.parse(response.body)
+    assert_equal ["Url can't be blank"], json["errors"], "Error was not received."
   end
 
 end
