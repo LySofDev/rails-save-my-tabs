@@ -76,4 +76,34 @@ class TabsControllerTest < ActionDispatch::IntegrationTest
     assert_equal ["Url can't be blank"], json["errors"], "Errors were not passed."
   end
 
+  test "Tab can be destroyed by authorized owner" do
+    user = create(:user)
+    authorized_headers = { 'Authorization': "Bearer #{user.as_token}" }
+    tab = create(:tab, user: user)
+    assert Tab.any?, "A tab should exist."
+    delete tab_url(tab), headers: authorized_headers
+    assert_response :success, "Response should be successful"
+    refute Tab.any?, "A tab should be destroyed."
+  end
+
+  test "Tab cannot be destroyed by another authorized user" do
+    user = create(:user)
+    other_user = create(:user)
+    authorized_headers = { 'Authorization': "Bearer #{other_user.as_token}" }
+    tab = create(:tab, user: user)
+    assert Tab.any?, "A tab should exist."
+    delete tab_url(tab), headers: authorized_headers
+    assert_response 403, "Response should be 403 - Forbidden"
+    assert Tab.any?, "A tab should not be destroyed."
+  end
+
+  test "Tab cannot be destroyed by unauthoized user" do
+    user = create(:user)
+    tab = create(:tab, user: user)
+    assert Tab.any?, "A tab should exist."
+    delete tab_url(tab)
+    assert_response 401, "Response should be 401 - Unauthorized"
+    assert Tab.any?, "A tab should not be destroyed."
+  end
+
 end

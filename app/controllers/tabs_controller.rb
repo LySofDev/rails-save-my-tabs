@@ -1,6 +1,6 @@
 class TabsController < ApplicationController
   before_action :authenticate_user
-  before_action :find_tab_with_current_user, only: [:update]
+  before_action :find_tab_with_current_user, only: [:update, :destroy]
 
   def create
     @tab = current_user.tabs.new(tab_params)
@@ -17,6 +17,11 @@ class TabsController < ApplicationController
     else
       render json: { errors: @tab.errors.full_messages }, status: 422
     end
+  end
+
+  def destroy
+    @tab.destroy
+    render json: nil, status: 200
   end
 
   private
