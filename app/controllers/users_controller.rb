@@ -4,9 +4,18 @@ class UsersController < ApplicationController
   def create
     @user = User.new(user_params)
     if @user.save
-      render json: { token: Knock::AuthToken.new(payload: { sub: @user.id }).token }
+      render json: { token: authorization_token(@user) }
     else
-      render json: { errors: @user.errors.full_messages}, status: 422
+      render json: { errors: @user.errors.full_messages }, status: 422
+    end
+  end
+
+  def authenticate
+    @user = User.find_by_email(authenticate_params["email"])
+    if @user and @user.has_password(authenticate_params["password"])
+      render json: { token: authorization_token(@user) }
+    else
+      render json: { errors: ["Invalid email or password"] }, status: 422
     end
   end
 
@@ -27,6 +36,14 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(:email, :password, :password_confirmation)
+  end
+
+  def authenticate_params
+    params.require(:authenticate).permit(:email, :password)
+  end
+
+  def authorization_token(user)
+    Knock::AuthToken.new(payload: { sub: user.id }).token
   end
 
 end

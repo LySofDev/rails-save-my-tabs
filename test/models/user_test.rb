@@ -39,4 +39,17 @@ class UserTest < ActiveSupport::TestCase
     second_user = build(:user, email: first_user.email)
     assert second_user.invalid?, "Email should be unique."
   end
+
+  test "User has_password verifier returns true on matching password" do
+    password = "foo-bar-biz"
+    user = create(:user, password: password, password_confirmation: password)
+    assert user.has_password(password), "User should have matching password."
+  end
+
+  test "User has_password verifier returns false on wrong password" do
+    password = "foo-bar-biz"
+    user = create(:user, password: password, password_confirmation: password)
+    refute user.has_password("will-fail"), "User should not have matching password."
+  end
+
 end

@@ -81,4 +81,32 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response 401, "Response should be 401 - Unauthorized"
     assert User.any?, "A user should not be deleted."
   end
+
+  test "User can autheticate with valid email and password" do
+    user = create(:user)
+    credentials = { email: user.email, password: "password" }
+    post authenticate_user_url, params: { authenticate: credentials }
+    assert_response :success, "Response should be successful"
+    token = Knock::AuthToken.new(payload: { sub: user.id }).token
+    json = JSON.parse(response.body)
+    assert_equal({ "token" => token }, json, "Token should have been returned.")
+  end
+
+  test "User cannot authenticate with invalid email and password" do
+    user = create(:user)
+    credentials = { email: user.email, password: "will-fail" }
+    post authenticate_user_url, params: { authenticate: credentials }
+    assert_response 422, "Response should be 422 - Unprocessable"
+    json = JSON.parse(response.body)
+    assert_equal({ "errors" => ["Invalid email or password"] }, json, "Error message should be included.")
+  end
+
+  test "User cannot authenticate if email isn't registered" do
+    user = build(:user)
+    credentials = { email: user.email, password: "password" }
+    post authenticate_user_url, params: { authenticate: credentials }
+    assert_response 422, "Response should be 422 - Unprocessable"
+    json = JSON.parse(response.body)
+    assert_equal({ "errors" => ["Invalid email or password"] }, json, "Error message should be included.")
+  end
 end

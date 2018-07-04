@@ -16,4 +16,9 @@ class User < ApplicationRecord
     super(options.merge({ except: [:password_digest] }))
   end
 
+  # Verify that a password matches
+  def has_password(password)
+    BCrypt::Password.new(self.password_digest) == password
+  end
+
 end
