@@ -8,7 +8,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     post users_url, params: { user: new_user }
     assert_response :success, "Response was not success."
     assert User.any?, "User was not created."
-    token = Knock::AuthToken.new(payload: { sub: User.last.id }).token
+    token = Knock::AuthToken.new(payload: { sub: User.last.as_principal }).token
     json = JSON.parse(response.body)
     assert_equal({ "token" => token }, json, "Token should have been returned.")
     refute_includes json.keys, "email", "Email should not be included."
@@ -36,7 +36,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     user = create(:user)
     new_email = "mac.hdz@gmail"
     updated_attributes = { email: new_email }
-    token = Knock::AuthToken.new(payload: { sub: user.id }).token
+    token = Knock::AuthToken.new(payload: { sub: user.as_principal }).token
     authenticated_header = { 'Authorization': "Bearer #{token}" }
     patch user_url(user), params: { user: updated_attributes}, headers: authenticated_header
     assert_response :success, "Response was not success."
@@ -56,7 +56,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     user = create(:user)
     new_email = ""
     updated_attributes = { email: new_email }
-    token = Knock::AuthToken.new(payload: { sub: user.id }).token
+    token = Knock::AuthToken.new(payload: { sub: user.as_principal }).token
     authenticated_header = { 'Authorization': "Bearer #{token}" }
     patch user_url(user), params: { user: updated_attributes}, headers: authenticated_header
     assert_response 422, "Response should be 422 - Unprocessable Entity."
@@ -67,7 +67,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   test "Authorized user can destroy account" do
     user = create(:user)
     assert User.any?, "A user should exist."
-    token = Knock::AuthToken.new(payload: { sub: user.id }).token
+    token = Knock::AuthToken.new(payload: { sub: user.as_principal }).token
     authenticated_header = { 'Authorization': "Bearer #{token}" }
     delete user_url(user), headers: authenticated_header
     assert_response :success, "Response should be success."
@@ -87,7 +87,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     credentials = { email: user.email, password: "password" }
     post authenticate_user_url, params: { authenticate: credentials }
     assert_response :success, "Response should be successful"
-    token = Knock::AuthToken.new(payload: { sub: user.id }).token
+    token = Knock::AuthToken.new(payload: { sub: user.as_principal }).token
     json = JSON.parse(response.body)
     assert_equal({ "token" => token }, json, "Token should have been returned.")
   end

@@ -54,7 +54,8 @@ class UserTest < ActiveSupport::TestCase
 
   test "User as_token returns a JWT token" do
     user = create(:user)
-    expected_token = Knock::AuthToken.new(payload: { sub: user.id }).token
+    principal = { id: user.id, email: user.email, role: user.role }
+    expected_token = Knock::AuthToken.new(payload: { sub: principal }).token
     assert_equal expected_token, user.as_token, "Tokens should match."
   end
 

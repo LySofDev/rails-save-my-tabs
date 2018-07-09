@@ -5,7 +5,7 @@ class User < ApplicationRecord
 
   # All tabs belong to a user
   has_many :tabs
-  
+
   # User has client role by default
   enum role: [:client, :admin]
 
@@ -24,8 +24,18 @@ class User < ApplicationRecord
     BCrypt::Password.new(self.password_digest) == password
   end
 
+  # The user as a principal for Token
+  def as_principal
+    { id: self.id, email: self.email, role: self.role }
+  end
+
   # Return the User as a JWT token
   def as_token
-    Knock::AuthToken.new(payload: { sub: self.id }).token
+    Knock::AuthToken.new(payload: { sub: self.as_principal }).token
+  end
+
+  # Find the current user from the payload's subject.id
+  def self.from_token_payload(payload)
+    self.find(payload["sub"]["id"])
   end
 end
