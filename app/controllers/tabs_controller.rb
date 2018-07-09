@@ -10,6 +10,10 @@ class TabsController < ApplicationController
     render json: @tab
   end
 
+  def count
+    render json: { count: current_user.tabs.count }
+  end
+
   def create
     @tab = current_user.tabs.new(tab_params)
     if @tab.save

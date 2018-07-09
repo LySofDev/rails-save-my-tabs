@@ -161,4 +161,15 @@ class TabsControllerTest < ActionDispatch::IntegrationTest
     assert_response 403, "Response should be 403 - Forbidden"
   end
 
+  test "An authenticated user can count their tabs" do
+    tab_count = 4
+    user = create(:user)
+    authorized_headers = { 'Authorization': "Bearer #{user.as_token}" }
+    tab_count.times { create(:tab, user: user) }
+    get tab_count_url, headers: authorized_headers
+    assert_response :success, "Response should be 200"
+    json = JSON.parse(response.body)
+    assert_equal tab_count, json["count"]
+  end
+
 end
