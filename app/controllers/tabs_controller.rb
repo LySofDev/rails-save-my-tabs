@@ -21,14 +21,10 @@ class TabsController < ApplicationController
     render json: @tab
   end
 
-  def count
-    render json: { count: current_user.tabs.count }
-  end
-
   def create
     @tab = current_user.tabs.new(tab_params)
     if @tab.save
-      render json: @tab
+      render json: { success: true }
     else
       render json: { errors: @tab.errors.full_messages }, status: 422
     end
@@ -36,7 +32,7 @@ class TabsController < ApplicationController
 
   def update
     if @tab.update(tab_params)
-      render json: @tab
+      render json: { success: true }
     else
       render json: { errors: @tab.errors.full_messages }, status: 422
     end
