@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get 'status', to: 'health#status'
   resources :users, only: [:create, :update, :destroy]
   post 'users/authenticate', to: 'users#authenticate', as: 'authenticate_user'
   get 'tabs', to: 'tabs#index', as: 'tabs'
