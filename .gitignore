@@ -73,3 +73,4 @@ node_modules/
 
 
 # End of https://www.gitignore.io/api/rails
+docker-compose.yml
