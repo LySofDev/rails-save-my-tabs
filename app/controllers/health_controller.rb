@@ -1,5 +1,5 @@
 class HealthController < ApplicationController
   def status
-    render json: { success: true }
+    head 200
   end
 end
