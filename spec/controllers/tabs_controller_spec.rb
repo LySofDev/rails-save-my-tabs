@@ -154,6 +154,15 @@ RSpec.describe TabsController, type: :controller do
         end
       end
 
+      it "returns the total tabs count for the user" do
+        other_user = create(:user)
+        5.times { create(:tab, user: other_user) }
+        expect(Tab.count).to eq 25
+        get :index
+        json = JSON.parse(response.body)
+        expect(json["count"]).to eq 20
+      end
+
       describe "pagination" do
 
         it "limits the records with the :count query parameter" do
@@ -366,7 +375,7 @@ RSpec.describe TabsController, type: :controller do
       end
 
     end
-    
+
   end
 
 end

@@ -143,4 +143,88 @@ RSpec.describe UsersController, type: :controller do
 
   end
 
+  describe "#update" do
+
+    before :each do
+      @user = create(:user)
+      @user_data = { email: "foo.bar@gmail.com" }
+    end
+
+    context "without a security token" do
+
+      it "returns a 401 status" do
+        patch :update, params: { user: @user_data }
+        expect(response.status).to eq 401
+      end
+
+      it "doesn't update the user" do
+        patch :update, params: { user: @user_data }
+        user = User.find(@user.id)
+        expect(user.email).not_to eq @user_data[:email]
+      end
+
+    end
+
+    context "with a security token" do
+
+      before :each do
+        request.headers.merge({ 'Authorization' => "Bearer #{@user.as_token}" })
+      end
+
+      it "returns a 200 status" do
+        patch :update, params: { user: @user_data }
+        expect(response.status).to eq 200
+      end
+
+      it "updates the user" do
+        patch :update, params: { user: @user_data }
+        user = User.find(@user.id)
+        expect(user.email).to eq @user_data[:email]
+      end
+
+    end
+
+  end
+
+  describe "#destroy" do
+
+    before :each do
+      @user = create(:user)
+    end
+
+    context "without a security token" do
+
+      it "returns a 401 status" do
+        delete :destroy
+        expect(response.status).to be 401
+      end
+
+      it "doesn't destroy the user" do
+        delete :destroy
+        user = User.find(@user.id)
+        expect(user).to be_persisted
+      end
+
+    end
+
+    context "with a security token" do
+
+      before :each do
+        request.headers.merge({ 'Authorization' => "Bearer #{@user.as_token}" })
+      end
+
+      it "returns a 200 status" do
+        delete :destroy
+        expect(response.status).to be 200
+      end
+
+      it "destroys the user record" do
+        delete :destroy
+        matching_users = User.where(id: @user.id).count
+        expect(matching_users).to eq 0
+      end
+    end
+
+  end
+
 end
