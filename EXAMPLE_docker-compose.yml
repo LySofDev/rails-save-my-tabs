@@ -1,0 +1,32 @@
+version: '3.2'
+
+services:
+################################################################################
+# Records Database
+################################################################################
+  db:
+    image: postgres:10.4-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./tmp/db:/var/lib/potgresql/data
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=pgdev
+################################################################################
+# Web Application
+################################################################################
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bin/dev
+    volumes:
+      - .:/save-my-tabs
+      - type: tmpfs
+        target: /save-my-tabs/tmp/pids
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
