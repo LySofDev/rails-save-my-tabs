@@ -5,3 +5,7 @@ WORKDIR /save-my-tabs
 COPY Gemfile* /save-my-tabs/
 RUN bundle install
 COPY . /save-my-tabs
+# Development Server
+CMD ["bin/test"]
+# Testing Server
+# CMD ["bin/test"]

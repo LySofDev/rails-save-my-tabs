@@ -1,0 +1,9 @@
+#!/bin/sh
+# Wait for Postgres to start
+sleep 3
+# Create databases
+bundle exec rake db:create && \
+# Execute database migrations
+bundle exec rake db:migrate && \
+# Confirm
+echo "Ready to test. Run: dc exec bundle exec guard"
