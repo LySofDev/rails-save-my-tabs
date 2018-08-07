@@ -6,13 +6,13 @@ class TabsController < ApplicationController
     @tab_count = current_user.tabs.count
     @tabs = current_user.tabs
       .order(:created_at => :desc)
-      .page(params[:offset]).per(params[:count])
+      .page(page_offset).per(page_count)
     render json: {
       tabs: @tabs,
       count: @tab_count,
       page: {
-        offset: params[:offset],
-        count: params[:count]
+        offset: page_offset,
+        count: page_count
       }
     }
   end
@@ -56,6 +56,14 @@ class TabsController < ApplicationController
       render json: nil, status: 403
       return false
     end
+  end
+
+  def page_count
+    params[:count] || 10
+  end
+
+  def page_offset
+    params[:offset] || 1
   end
 
 end
