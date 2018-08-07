@@ -1,24 +1,39 @@
-# README
+# Rails: Save My Tabs
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Table Of Contents
 
-Things you may want to cover:
+1. Introduction
+1. Development Setup
+1. Testing Setup
 
-* Ruby version
+## Introduction
 
-* System dependencies
+The Save My Tabs Rails web API provides a simple storage for web addresses and
+descriptive titles. The web application supports JWT authentication.
 
-* Configuration
+## Development Setup
 
-* Database creation
+To run the development environment, you must have Docker and Docker-Compose
+installed in your system.
 
-* Database initialization
+```
+git clone https://github.com/LySofDev/rails-save-my-tabs.git
+cd rails-save-my-tabs
+docker-compose build
+docker-compose up
+```
 
-* How to run the test suite
+The development server will listen on port 3000 by default.
 
-* Services (job queues, cache servers, search engines, etc.)
+## Testing Setup
 
-* Deployment instructions
+To run the test environment, you must first have the Development Setup completed.
 
-* ...
+```
+docker-compose down
+docker-compose run web /bin/ash
+bundle exec rake db:create
+bundle exec rake db:migrate
+bundle exec guard
+all rspec
+```
