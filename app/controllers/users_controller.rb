@@ -2,7 +2,7 @@ class UsersController < ApplicationController
   before_action :authenticate_user, only: [:update, :destroy]
 
   def create
-    @user = User.new(user_params)
+    @user = User.new(create_user_params)
     if @user.save
       render json: { payload: @user.as_token, prefix: "Bearer" }
     else
@@ -20,7 +20,7 @@ class UsersController < ApplicationController
   end
 
   def update
-    if current_user.update(user_params)
+    if current_user.update(update_user_params)
       render json: current_user
     else
       render json: { errors: current_user.errors.full_messages }, status: 422
@@ -34,8 +34,12 @@ class UsersController < ApplicationController
 
   private
 
-  def user_params
+  def create_user_params
     params.require(:user).permit(:email, :password, :password_confirmation)
+  end
+
+  def update_user_params
+    params.require(:user).permit(:email, :password)
   end
 
   def authenticate_params

@@ -10,10 +10,14 @@ RSpec.describe UsersController, type: :controller do
         @user_data = attributes_for(:user)
       end
 
+      it "will return a 200 status" do
+        post :create, params: { user: @user_data }
+        expect(response.status).to be 200
+      end
+
       it "will create a new user" do
         expect(User.count).to eq 0
         post :create, params: { user: @user_data }
-        expect(response.status).to be 200
         expect(User.count).to eq 1
       end
 
@@ -63,6 +67,76 @@ RSpec.describe UsersController, type: :controller do
         json = JSON.parse(response.body)
         expect(json.keys).to include "errors"
         expect(json["errors"]).to include "Password confirmation doesn't match Password"
+      end
+
+    end
+
+  end
+
+  describe "#authenticate" do
+
+    context "with valid authentication" do
+
+      before :each do
+        @user = build(:user)
+        @credentials = {
+          email: @user.email,
+          password: @user.password
+        }
+        @user.save!
+      end
+
+      it "will return a 200 status" do
+        post :authenticate, params: { authenticate: @credentials }
+        expect(response.status).to be 200
+      end
+
+      it "will return a security token" do
+        post :authenticate, params: { authenticate: @credentials }
+        json = JSON.parse(response.body)
+        expect(json.keys).to include "payload"
+        expect(json.keys).to include "prefix"
+        expect(json["payload"]).to eq @user.as_token
+        expect(json["prefix"]).to eq "Bearer"
+      end
+
+      it "will not return error messages" do
+        post :authenticate, params: { authenticate: @credentials }
+        json = JSON.parse(response.body)
+        expect(json.keys).not_to include "errors"
+      end
+
+    end
+
+    context "with invalid authentication" do
+
+      before :each do
+        @user = build(:user)
+        @credentials = {
+          email: @user.email,
+          password: "will-fail"
+        }
+        @user.save!
+      end
+
+      it "will return a 422 status" do
+        post :authenticate, params: { authenticate: @credentials }
+        expect(response.status).to be 422
+      end
+
+      it "will not return a security token" do
+        post :authenticate, params: { authenticate: @credentials }
+        json = JSON.parse(response.body)
+        expect(json.keys).not_to include "prefix"
+        expect(json.keys).not_to include "payload"
+        expect(json.values).not_to include @user.as_token
+      end
+
+      it "will return error messages" do
+        post :authenticate, params: { authenticate: @credentials }
+        json = JSON.parse(response.body)
+        expect(json.keys).to include "errors"
+        expect(json["errors"]).to include "Invalid email or password"
       end
 
     end
