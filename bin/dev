@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Wait for database services to be up
+sleep 2
+
+# Create databases
+bundle exec rake db:create
+
+# Run migrations
+bundle exec rake db:migrate
+
+# Start the web server and workers
+foreman start -f Procfile -p 3000
