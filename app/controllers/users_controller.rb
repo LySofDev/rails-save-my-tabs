@@ -2,48 +2,23 @@ class UsersController < ApplicationController
   before_action :authenticate_user, only: [:update, :destroy]
 
   def create
-    @user = User.new(create_user_params)
-    if @user.save
-      render json: { payload: @user.as_token, prefix: "Bearer" }
-    else
-      render json: { errors: @user.errors.full_messages }, status: 422
-    end
+    operation = Concerns::CreateUser.new(params)
+    render json: operation.json, status: operation.status
   end
 
   def authenticate
-    @user = User.find_by_email(authenticate_params["email"])
-    if @user and @user.has_password(authenticate_params["password"])
-      render json: { payload: @user.as_token, prefix: "Bearer" }
-    else
-      render json: { errors: ["Invalid email or password"] }, status: 422
-    end
+    operation = Concerns::AuthenticateUser.new(params)
+    render json: operation.json, status: operation.status
   end
 
   def update
-    if current_user.update(update_user_params)
-      render json: current_user
-    else
-      render json: { errors: current_user.errors.full_messages }, status: 422
-    end
+    operation = Concerns::UpdateUser.new(current_user, params)
+    render json: operation.json, status: operation.status
   end
 
   def destroy
-    current_user.destroy
-    render json: { success: true }, status: 200
-  end
-
-  private
-
-  def create_user_params
-    params.require(:user).permit(:email, :password, :password_confirmation)
-  end
-
-  def update_user_params
-    params.require(:user).permit(:email, :password)
-  end
-
-  def authenticate_params
-    params.require(:authenticate).permit(:email, :password)
+    operation = Concerns::DestroyUser.new(current_user)
+    render json: operation.json, status: operation.status
   end
 
 end
