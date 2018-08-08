@@ -21,4 +21,12 @@ class UsersController < ApplicationController
     render json: operation.json, status: operation.status
   end
 
+  def build_user_from_params
+    User.new do |u|
+      u.email = params[:email]
+      u.password = params[:password]
+      u.password_confirmation = params[:passwordConfirmation] || params[:password_confirmation]
+    end
+  end
+
 end
