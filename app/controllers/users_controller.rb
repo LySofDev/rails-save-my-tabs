@@ -2,7 +2,7 @@ class UsersController < ApplicationController
   before_action :authenticate_user, only: [:update, :destroy]
 
   def create
-    @user = User.new(create_user_params)
+    @user = build_user_from_params
     if @user.save
       render json: { payload: @user.as_token, prefix: "Bearer" }
     else
@@ -35,7 +35,7 @@ class UsersController < ApplicationController
   private
 
   def create_user_params
-    params.require(:user).permit(:email, :password, :password_confirmation)
+    params.require(:user).permit(:email, :password, :password_confirmation, :passwordConfirmation)
   end
 
   def update_user_params
@@ -44,6 +44,14 @@ class UsersController < ApplicationController
 
   def authenticate_params
     params.require(:authenticate).permit(:email, :password)
+  end
+
+  def build_user_from_params
+    User.new do |u|
+      u.email = params[:email]
+      u.password = params[:password]
+      u.password_confirmation = params[:passwordConfirmation] || params[:password_confirmation]
+    end
   end
 
 end
