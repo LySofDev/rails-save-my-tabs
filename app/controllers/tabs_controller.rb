@@ -3,18 +3,8 @@ class TabsController < ApplicationController
   before_action :find_tab_with_current_user, only: [:show, :update, :destroy]
 
   def index
-    @tab_count = current_user.tabs.count
-    @tabs = current_user.tabs
-      .order(:created_at => :desc)
-      .page(page_offset).per(page_count)
-    render json: {
-      tabs: @tabs,
-      count: @tab_count,
-      page: {
-        offset: page_offset,
-        count: page_count
-      }
-    }
+    operation = Concerns::IndexTabs.new(current_user, params)
+    render json: operation.json, status: operation.status
   end
 
   def show
@@ -22,12 +12,8 @@ class TabsController < ApplicationController
   end
 
   def create
-    @tab = current_user.tabs.new(tab_params)
-    if @tab.save
-      render json: @tab
-    else
-      render json: { errors: @tab.errors.full_messages }, status: 422
-    end
+    operation = Concerns::CreateTab.new(current_user, params)
+    render json: operation.json, status: operation.status
   end
 
   def update

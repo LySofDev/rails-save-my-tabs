@@ -17,5 +17,14 @@ module Concerns
       { errors: messages }
     end
 
+    def self.resource(type, attributes)
+      {
+        data: {
+          type: type,
+          attributes: attributes
+        }
+      }
+    end
+
   end
 end

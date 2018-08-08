@@ -89,9 +89,9 @@ RSpec.describe User, type: :model do
   describe "#as_token" do
 
     before :each do
-      user = create(:user)
-      @principal = user.as_principal
-      @token = user.as_token
+      @user = create(:user)
+      @principal = @user.as_principal
+      @token = @user.as_token
     end
 
     it "returns a JWT string" do
@@ -104,6 +104,10 @@ RSpec.describe User, type: :model do
       payload = JWT.decode(@token, secret, true, { algorigth: 'HS256' })[0]["sub"]
       expect(payload.keys.map { |k| k.to_sym }).to eq @principal.keys
       expect(payload.values).to eq @principal.values
+    end
+
+    it "is consistent" do
+      expect(@token).to eq @user.as_token
     end
 
   end
@@ -125,7 +129,7 @@ RSpec.describe User, type: :model do
       end
       expect(@user.tabs.count).to eq 3
     end
-    
+
   end
 
 end

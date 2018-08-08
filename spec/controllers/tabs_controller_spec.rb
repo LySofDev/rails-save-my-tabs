@@ -4,22 +4,31 @@ RSpec.describe TabsController, type: :controller do
 
   describe "#create" do
 
+    before :each do
+      @user = create(:user)
+      @tab = build(:tab, user: @user)
+      @json_request = {
+        data: {
+          type: "tabs",
+          attributes: {
+            title: @tab.title,
+            url: @tab.url
+          }
+        }
+      }
+    end
+
     context "without a security token" do
 
-      before :each do
-        @user = create(:user)
-        @tab_data = attributes_for(:tab, user: @user)
-      end
-
       it "returns a 401 status" do
-        post :create, params: { tab: @tab_data }
+        post :create, params: @json_request
         expect(response.status).to be 401
       end
 
       it "doesn't create a new tab" do
         expect(Tab.count).to eq 0
         expect(@user.tabs.count).to eq 0
-        post :create, params: { tab: @tab_data }
+        post :create, params: @json_request
         expect(Tab.count).to eq 0
         expect(@user.tabs.count).to eq 0
       end
@@ -29,35 +38,40 @@ RSpec.describe TabsController, type: :controller do
     context "with valid tab data" do
 
       before :each do
-        @user = create(:user)
-        @tab_data = attributes_for(:tab, user: @user)
         request.headers.merge({ "Authorization" => "Beare #{@user.as_token}" })
       end
 
       it "returns a 200 status" do
-        post :create, params: { tab: @tab_data }
+        post :create, params: @json_request
         expect(response.status).to be 200
       end
 
       it "creates the new tab" do
         expect(Tab.count).to eq 0
         expect(@user.tabs.count).to eq 0
-        post :create, params: { tab: @tab_data }
+        post :create, params: @json_request
         expect(Tab.count).to eq 1
         expect(@user.tabs.count).to eq 1
       end
 
       it "returns the new tab id" do
-        post :create, params: { tab: @tab_data }
-        json = JSON.parse(response.body)
-        expect(json.keys).to include "id"
-        expect(json["id"]).to eq Tab.last.id
+        post :create, params: @json_request
+        expect(json(response)).to eq ({
+          data: {
+            type: "tabs",
+            attributes: {
+              id: @user.tabs.last.id,
+              title: @user.tabs.last.title,
+              url: @user.tabs.last.url,
+              userId: @user.tabs.last.user.id
+            }
+          }
+        })
       end
 
       it "doesn't return errors" do
-        post :create, params: { tab: @tab_data }
-        json = JSON.parse(response.body)
-        expect(json.keys).not_to include "errors"
+        post :create, params: @json_request
+        expect(json(response).keys).not_to include :errors
       end
 
     end
@@ -65,35 +79,35 @@ RSpec.describe TabsController, type: :controller do
     context "with invalid tab data" do
 
       before :each do
-        @user = create(:user)
-        @tab_data = attributes_for(:tab, user: @user, url: "")
+        @json_request[:data][:attributes][:url] = ""
         request.headers.merge({ "Authorization" => "Beare #{@user.as_token}" })
       end
 
       it "returns a 422 status" do
-        post :create, params: { tab: @tab_data }
+        post :create, params: @json_request
         expect(response.status).to be 422
       end
 
       it "doesn't create a new tab" do
         expect(Tab.count).to eq 0
         expect(@user.tabs.count).to eq 0
-        post :create, params: { tab: @tab_data }
+        post :create, params: @json_request
         expect(Tab.count).to eq 0
         expect(@user.tabs.count).to eq 0
       end
 
       it "doesn't return a new tab id" do
-        post :create, params: { tab: @tab_data }
-        json = JSON.parse(response.body)
-        expect(json.keys).not_to include "id"
+        post :create, params: @json_request
+        expect(json(response).keys).not_to include :data
       end
 
       it "returns errors" do
-        post :create, params: { tab: @tab_data }
-        json = JSON.parse(response.body)
-        expect(json.keys).to include "errors"
-        expect(json["errors"]).to include "Url can't be blank"
+        post :create, params: @json_request
+        expect(json(response)).to eq ({
+          errors: [
+            "Url can't be blank"
+          ]
+        })
       end
 
     end
@@ -129,28 +143,41 @@ RSpec.describe TabsController, type: :controller do
 
       it "returns tabs belonging to the user" do
         get :index
-        json = JSON.parse(response.body)
-        expect(json.keys).to include "tabs"
-        json["tabs"].each do |tab|
-          expect(tab["user_id"]).to eq @user.id
-        end
+        expect(json(response)).to eq ({
+          data: {
+            count: 20,
+            page: {
+              offset: 1,
+              count: 10
+            },
+            tabs: @user.tabs.order(created_at: 'DESC').take(10).collect { |tab|
+              {
+                type: "tabs",
+                attributes: {
+                  id: tab.id,
+                  title: tab.title,
+                  url: tab.url,
+                  userId: tab.user.id
+                }
+              }
+            }
+          }
+        })
       end
 
       it "returns 10 tabs" do
         get :index
-        json = JSON.parse(response.body)
-        expect(json["tabs"].count).to eq 10
+        expect(json(response)[:data][:tabs].length).to eq 10
       end
 
       it "returns the latest tabs" do
         latest_tabs = Tab.order(created_at: "DESC").take(10)
         get :index
-        json = JSON.parse(response.body)
         latest_tabs.each_with_index do |tab, i|
-          current_tab = json["tabs"][i]
-          expect(current_tab["id"]).to eq tab.id
-          expect(current_tab["title"]).to eq tab.title
-          expect(current_tab["url"]).to eq tab.url
+          current_tab = json(response)[:data][:tabs][i][:attributes]
+          expect(current_tab[:id]).to eq tab.id
+          expect(current_tab[:title]).to eq tab.title
+          expect(current_tab[:url]).to eq tab.url
         end
       end
 
@@ -159,8 +186,7 @@ RSpec.describe TabsController, type: :controller do
         5.times { create(:tab, user: other_user) }
         expect(Tab.count).to eq 25
         get :index
-        json = JSON.parse(response.body)
-        expect(json["count"]).to eq 20
+        expect(json(response)[:data][:count]).to eq 20
       end
 
       describe "pagination" do
@@ -168,20 +194,18 @@ RSpec.describe TabsController, type: :controller do
         it "limits the records with the :count query parameter" do
           tab_count = 5
           get :index, params: { count: tab_count }
-          json = JSON.parse(response.body)
-          expect(json["tabs"].count).to eq tab_count
+          expect(json(response)[:data][:page][:count].to_i).to eq tab_count
         end
 
         it "shifts the records with the :offset query parameter" do
           tab_count = 5
           expected_tabs = Tab.order(created_at: "DESC").offset(5).take(5)
           get :index, params: { offset: 2, count: tab_count}
-          json = JSON.parse(response.body)
           expected_tabs.each_with_index do |tab, i|
-            current_tab = json["tabs"][i]
-            expect(current_tab["id"]).to eq tab.id
-            expect(current_tab["title"]).to eq tab.title
-            expect(current_tab["url"]).to eq tab.url
+            current_tab = json(response)[:data][:tabs][i][:attributes]
+            expect(current_tab[:id]).to eq tab.id
+            expect(current_tab[:title]).to eq tab.title
+            expect(current_tab[:url]).to eq tab.url
           end
         end
 
