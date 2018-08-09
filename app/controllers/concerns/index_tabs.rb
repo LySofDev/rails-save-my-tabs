@@ -8,26 +8,12 @@ module Concerns
     end
 
     def json
-      {
-        data: {
-          count: @user.tabs.count,
-          page: {
-            count: @count,
-            offset: @offset
-          },
-          tabs: @user.tabs.order(created_at: 'DESC').page(@offset).per(@count).collect { |tab|
-            {
-              type: "tabs",
-              attributes: {
-                id: tab.id,
-                title: tab.title,
-                url: tab.url,
-                userId: tab.user.id
-              }
-            }
-          }
-        }
-      }
+      Concerns::JSONTemplates.tab_collection({
+        tabs: @user.tabs.order(created_at: 'DESC').page(@offset).per(@count),
+        offset: @offset,
+        count: @count,
+        total_count: @user.tabs.count
+      })
     end
 
     def status

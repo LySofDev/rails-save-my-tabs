@@ -349,8 +349,8 @@ RSpec.describe TabsController, type: :controller do
     context "with a different user identity" do
 
       before :each do
-        user = create(:user)
-        request.headers.merge({ "Authorization" => "Beare #{user.as_token}" })
+        other_user = create(:user)
+        request.headers.merge({ "Authorization" => "Beare #{other_user.as_token}" })
       end
 
       it "returns a 403 code" do
@@ -371,18 +371,20 @@ RSpec.describe TabsController, type: :controller do
         expect(response.status).to eq 200
       end
 
-      it "returns the tab url" do
+      it "returns the tab entity" do
         get :show, params: { id: @tab.id }
-        json = JSON.parse(response.body)
-        expect(json["url"]).to eq @tab.url
+        expect(json(response)).to eq ({
+          data: {
+            type: "tabs",
+            attributes: {
+              id: @tab.id,
+              url: @tab.url,
+              title: @tab.title,
+              userId: @tab.user.id
+            }
+          }
+        })
       end
-
-      it "returns the tab title" do
-        get :show, params: { id: @tab.id }
-        json = JSON.parse(response.body)
-        expect(json["title"]).to eq @tab.title
-      end
-
     end
 
   end

@@ -8,7 +8,8 @@ class TabsController < ApplicationController
   end
 
   def show
-    render json: @tab
+    operation = Concerns::ShowTab.new(current_user, params)
+    render json: operation.json, status: operation.status
   end
 
   def create
@@ -22,8 +23,8 @@ class TabsController < ApplicationController
   end
 
   def destroy
-    @tab.destroy
-    render json: nil, status: 200
+    operation = Concerns::DestroyTab.new(current_user, params)
+    render json: operation.json, status: operation.status
   end
 
   private

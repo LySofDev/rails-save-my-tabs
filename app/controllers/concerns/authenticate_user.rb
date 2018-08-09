@@ -2,7 +2,10 @@ module Concerns
   class AuthenticateUser
 
     def initialize(params)
-      authenticate_user_with sanitized params
+      @email = params[:data][:attributes][:email]
+      @password = params[:data][:attributes][:password]
+      @user = User.find_by_email(@email)
+      @success = @user && @user.has_password(@password)
     end
 
     # The JSON object representing the response
@@ -26,18 +29,6 @@ module Concerns
     # user's registration data
     def authentication_errors
       Concerns::JSONTemplates.errors(["Invalid email or password."])
-    end
-
-    # Sanitze registration data for user initialization
-    def sanitized params
-      params[:data][:attributes]
-    end
-
-    # Authenticate user with the provided credentials.
-    # Store the outcome of the operation in @success
-    def authenticate_user_with params
-      @user = User.find_by_email(params[:email])
-      @success = @user && @user.has_password(params[:password])
     end
 
   end

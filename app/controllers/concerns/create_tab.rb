@@ -3,7 +3,14 @@ module Concerns
 
     def initialize(current_user, params)
       @user = current_user
-      create_tab_with santized params
+      @title = params[:data][:attributes][:title]
+      @url = params[:data][:attributes][:url]
+      @tab = Tab.new do |t|
+        t.user = @user
+        t.url = @url if @url
+        t.title = @title if @title
+      end
+      @success = @tab.save
     end
 
     def json
@@ -19,19 +26,6 @@ module Concerns
 
     def tab_entity
       Concerns::JSONTemplates.tab_entity(@tab)
-    end
-
-    def santized params
-      params[:data][:attributes]
-    end
-
-    def create_tab_with params
-      @tab = Tab.new do |t|
-        t.title = params[:title] if params[:title]
-        t.url = params[:url] if params[:url]
-        t.user = @user
-      end
-      @success = @tab.save
     end
 
     def validation_errors

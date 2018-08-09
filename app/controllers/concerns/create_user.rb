@@ -2,7 +2,15 @@ module Concerns
   class CreateUser
 
     def initialize(params)
-      create_user_with sanitized params
+      @email = params[:data][:attributes][:email]
+      @password = params[:data][:attributes][:password]
+      @confirmation = params[:data][:attributes][:confirmation]
+      @user = User.new do |u|
+        u.email = @email
+        u.password = @password
+        u.password_confirmation = @confirmation
+      end
+      @success = @user.save
     end
 
     # The JSON object representing the response
@@ -26,22 +34,6 @@ module Concerns
     # user's registration data
     def validation_errors
       Concerns::JSONTemplates.errors(@user.errors.full_messages)
-    end
-
-    # Sanitze registration data for user initialization
-    def sanitized params
-      params[:data][:attributes]
-    end
-
-    # Create new user with request data
-    # Store the operation's outcome in @success
-    def create_user_with params
-      @user = User.new do |u|
-        u.email = params[:email]
-        u.password = params[:password]
-        u.password_confirmation = params[:confirmation]
-      end
-      @success = @user.save
     end
 
   end

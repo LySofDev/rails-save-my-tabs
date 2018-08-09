@@ -40,10 +40,10 @@ module Concerns
       }
     end
 
-    def self.tab_collection(tabs, offset, count)
+    def self.tab_collection(tabs: [], total_count: 0, offset: 1, count: 10)
       {
         data: {
-          count: tabs.count,
+          count: total_count,
           page: {
             offset: offset,
             count: count
