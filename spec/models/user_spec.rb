@@ -100,8 +100,9 @@ RSpec.describe User, type: :model do
     end
 
     it "contains the principal" do
-      secret = Rails.application.credentials.jwt_secret
-      payload = JWT.decode(@token, secret, true, { algorigth: 'HS256' })[0]["sub"]
+      secret = ENV["SECRET_KEY_BASE"]
+      config = { algorigth: 'HS256' }
+      payload = JWT.decode(@token, secret, true, config)[0]["sub"]
       expect(payload.keys.map { |k| k.to_sym }).to eq @principal.keys
       expect(payload.values).to eq @principal.values
     end
