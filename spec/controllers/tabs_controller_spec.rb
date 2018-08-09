@@ -218,22 +218,31 @@ RSpec.describe TabsController, type: :controller do
   describe "#update" do
 
     before :each do
+      @updated_url = "https://www.google.com"
       @user = create(:user)
       @tab = create(:tab, user: @user)
-      @tab_data = { url: "https://www.google.com" }
+      @json_request = {
+        id: @tab.id,
+        data: {
+          type: "tabs",
+          attributes: {
+            url: @updated_url
+          }
+        }
+      }
     end
 
     context "without a security token" do
 
       it "returns a 401 code" do
-        patch :update, params: { id: @tab.id, tab: @tab_data }
+        patch :update, params: @json_request
         expect(response.status).to be 401
       end
 
       it "doesn't update the tab" do
-        patch :update, params: { id: @tab.id, tab: @tab_data }
+        patch :update, params: @json_request
         tab = Tab.find(@tab.id)
-        expect(tab.url).not_to eq @tab_data[:url]
+        expect(tab.url).not_to eq @updated_url
       end
 
     end
@@ -241,19 +250,19 @@ RSpec.describe TabsController, type: :controller do
     context "with a different user identity" do
 
       before :each do
-        user = create(:user)
-        request.headers.merge({ "Authorization" => "Beare #{user.as_token}" })
+        other_user = create(:user)
+        request.headers.merge({ "Authorization" => "Beare #{other_user.as_token}" })
       end
 
       it "returns a 403 code" do
-        patch :update, params: { id: @tab.id, tab: @tab_data }
+        patch :update, params: @json_request
         expect(response.status).to be 403
       end
 
       it "doesn't update the tab" do
-        patch :update, params: { id: @tab.id, tab: @tab_data }
+        patch :update, params: @json_request
         tab = Tab.find(@tab.id)
-        expect(tab.url).not_to eq @tab_data[:url]
+        expect(tab.url).not_to eq @updated_url
       end
 
     end
@@ -265,14 +274,29 @@ RSpec.describe TabsController, type: :controller do
       end
 
       it "returns a 200 code" do
-        patch :update, params: { id: @tab.id, tab: @tab_data }
+        patch :update, params: @json_request
         expect(response.status).to eq 200
       end
 
       it "updates the tab" do
-        patch :update, params: { id: @tab.id, tab: @tab_data }
+        patch :update, params: @json_request
         tab = Tab.find(@tab.id)
-        expect(tab.url).to eq @tab_data[:url]
+        expect(tab.url).to eq @updated_url
+      end
+
+      it "returns the updated tab" do
+        patch :update, params: @json_request
+        expect(json(response)).to eq ({
+          data: {
+            type: "tabs",
+            attributes: {
+              id: @tab.id,
+              url: @updated_url,
+              title: @tab.title,
+              userId: @tab.user.id
+            }
+          }
+        })
       end
 
     end
@@ -280,19 +304,28 @@ RSpec.describe TabsController, type: :controller do
     context "with invalid update data" do
 
       before :each do
-        @tab_data[:url] = ""
+        @json_request[:data][:attributes][:url] = ""
         request.headers.merge({ "Authorization" => "Beare #{@user.as_token}" })
       end
 
       it "returns a 422 code" do
-        patch :update, params: { id: @tab.id, tab: @tab_data }
+        patch :update, params: @json_request
         expect(response.status).to eq 422
       end
 
       it "doesn't update the tab" do
-        patch :update, params: { id: @tab.id, tab: @tab_data }
+        patch :update, params: @json_request
         tab = Tab.find(@tab.id)
         expect(tab.url).not_to eq ""
+      end
+
+      it "returns error messages" do
+        patch :update, params: @json_request
+        expect(json(response)).to eq ({
+          errors: [
+            "Url can't be blank"
+          ]
+        })
       end
 
     end

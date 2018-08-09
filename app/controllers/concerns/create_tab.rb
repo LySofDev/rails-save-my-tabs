@@ -18,12 +18,7 @@ module Concerns
 
 
     def tab_entity
-      Concerns::JSONTemplates.resource("tabs", {
-        id: @tab.id,
-        url: @tab.url,
-        title: @tab.title,
-        userId: @tab.user.id
-      })
+      Concerns::JSONTemplates.tab_entity(@tab)
     end
 
     def santized params

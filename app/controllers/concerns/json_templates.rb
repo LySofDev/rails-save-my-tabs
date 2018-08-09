@@ -26,5 +26,42 @@ module Concerns
       }
     end
 
+    def self.tab_entity(tab)
+      {
+        data: {
+          type: "tabs",
+          attributes: {
+            id: tab.id,
+            url: tab.url,
+            title: tab.title,
+            userId: tab.user.id
+          }
+        }
+      }
+    end
+
+    def self.tab_collection(tabs, offset, count)
+      {
+        data: {
+          count: tabs.count,
+          page: {
+            offset: offset,
+            count: count
+          },
+          tabs: tabs.collect { |tab|
+            {
+              type: "tabs",
+              attributes: {
+                id: tab.id,
+                url: tab.url,
+                title: tab.title,
+                userId: tab.user.id
+              }
+            }
+          }
+        }
+      }
+    end
+
   end
 end

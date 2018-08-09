@@ -17,11 +17,8 @@ class TabsController < ApplicationController
   end
 
   def update
-    if @tab.update(tab_params)
-      render json: @tab
-    else
-      render json: { errors: @tab.errors.full_messages }, status: 422
-    end
+    operation = Concerns::UpdateTab.new(current_user, params)
+    render json: operation.json, status: operation.status
   end
 
   def destroy
